@@ -7,7 +7,6 @@ import android.content.Context;
 import android.util.Log;
 
 import java.lang.reflect.Method;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.github.libxposed.api.XposedInterface;
@@ -21,11 +20,6 @@ import io.github.libxposed.api.XposedModuleInterface;
 public final class NotificationCleanerModule extends XposedModule {
     private static final String TAG = "AutoClearNotification";
     private static final AtomicBoolean HOOK_INSTALLED = new AtomicBoolean(false);
-    private static final Set<String> PROCESS_BLACKLIST = Set.of(
-            "android",
-            "com.android.systemui",
-            "com.auto.clear.notification"
-    );
 
     @Override
     public void onModuleLoaded(XposedModuleInterface.ModuleLoadedParam param) {
@@ -35,7 +29,7 @@ public final class NotificationCleanerModule extends XposedModule {
     @Override
     public void onPackageLoaded(XposedModuleInterface.PackageLoadedParam param) {
         String packageName = param.getPackageName();
-        if (PROCESS_BLACKLIST.contains(packageName) || !param.isFirstPackage()) {
+        if (isIgnoredPackage(packageName) || !param.isFirstPackage()) {
             return;
         }
         if (!HOOK_INSTALLED.compareAndSet(false, true)) {
@@ -103,6 +97,12 @@ public final class NotificationCleanerModule extends XposedModule {
         } catch (Throwable ignored) {
             return "<unknown>";
         }
+    }
+
+    private boolean isIgnoredPackage(String packageName) {
+        return "android".equals(packageName)
+                || "com.android.systemui".equals(packageName)
+                || "com.auto.clear.notification".equals(packageName);
     }
 
     private void logInfo(String message) {
