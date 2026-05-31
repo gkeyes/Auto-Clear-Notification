@@ -35,11 +35,7 @@ public final class NotificationCleanerModule extends XposedModule {
     @Override
     public void onPackageLoaded(XposedModuleInterface.PackageLoadedParam param) {
         String packageName = param.getPackageName();
-        String processName = safeProcessName(param);
-        if (packageName == null || processName == null) {
-            return;
-        }
-        if (PROCESS_BLACKLIST.contains(packageName) || !packageName.equals(processName)) {
+        if (PROCESS_BLACKLIST.contains(packageName) || !param.isFirstPackage()) {
             return;
         }
         if (!HOOK_INSTALLED.compareAndSet(false, true)) {
@@ -102,14 +98,6 @@ public final class NotificationCleanerModule extends XposedModule {
     }
 
     private String safeProcessName(XposedModuleInterface.ModuleLoadedParam param) {
-        try {
-            return param.getProcessName();
-        } catch (Throwable ignored) {
-            return "<unknown>";
-        }
-    }
-
-    private String safeProcessName(XposedModuleInterface.PackageLoadedParam param) {
         try {
             return param.getProcessName();
         } catch (Throwable ignored) {
