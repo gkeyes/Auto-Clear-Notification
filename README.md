@@ -25,14 +25,13 @@
 
 - modern `libxposed` API `101`
 - Android Gradle Plugin `8.2.0`
-- Kotlin `1.9.20`
-- Compose 作为说明页 UI
+- 原生 Android Activity 作为说明页 UI
 
 ## 项目结构
 
 ```text
 app/src/main/java/com/auto/clear/notification/
-├── MainActivity.kt
+├── MainActivity.java
 └── NotificationCleanerModule.java
 
 app/src/main/resources/META-INF/xposed/
