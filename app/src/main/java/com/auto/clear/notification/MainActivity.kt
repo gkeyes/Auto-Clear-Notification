@@ -1,212 +1,87 @@
 package com.auto.clear.notification
 
-import android.app.NotificationManager
-import android.content.Context
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.material3.Card
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.auto.clear.notification.config.ConfigManager
 
 class MainActivity : ComponentActivity() {
-    private val handler = Handler(Looper.getMainLooper())
-    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        ConfigManager.init(this)
         setContent {
             MaterialTheme {
-                MainScreen()
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    MainScreen()
+                }
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen() {
-    val context = LocalContext.current
-    var isEnabled by remember { mutableStateOf(ConfigManager.isEnabled) }
-    var logs by remember { mutableStateOf("") }
-    var logPath by remember { mutableStateOf("") }
-    var isClearing by remember { mutableStateOf(false) }
-    
+private fun MainScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .verticalScroll(rememberScrollState())
+            .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "NotifyDis",
+            text = "Auto-Clear Notification",
             style = MaterialTheme.typography.headlineMedium
         )
         Text(
-            text = "LSPosed 模块 v2.2",
+            text = "Modern libxposed API 101 module",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "功能设置",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("启用通知清除")
-                    Switch(
-                        checked = isEnabled,
-                        onCheckedChange = {
-                            isEnabled = it
-                            ConfigManager.isEnabled = it
-                        }
-                    )
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "说明: 打开 App 时自动清除该应用的通知。正在进行的通知会被保留。",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "测试功能",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(
-                    onClick = {
-                        isClearing = true
-                        val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                        val activeNotifs = nm.activeNotifications
-                        var cleared = 0
-                        var skipped = 0
-                        
-                        for (notif in activeNotifs) {
-                            try {
-                                val isOngoing = (notif.notification.flags and android.app.Notification.FLAG_ONGOING_EVENT) != 0
-                                if (isOngoing) {
-                                    skipped++
-                                    continue
-                                }
-                                nm.cancel(notif.tag, notif.id)
-                                cleared++
-                            } catch (e: Exception) {}
-                        }
-                        
-                        Toast.makeText(context, "已清除 $cleared 条通知，跳过 $skipped 条进行中通知", Toast.LENGTH_LONG).show()
-                        isClearing = false
-                    },
-                    enabled = !isClearing,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(if (isClearing) "清除中..." else "清除所有通知")
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "点击后立即清除通知栏中的所有非进行中通知",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "日志查看",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Row {
-                        OutlinedButton(onClick = {
-                            logs = ModuleLogger.getLogs()
-                            logPath = ModuleLogger.getLogFilePath() ?: "无"
-                        }) {
-                            Text("刷新")
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        OutlinedButton(onClick = {
-                            ModuleLogger.clear()
-                            logs = ""
-                        }) {
-                            Text("清空")
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "日志路径: $logPath",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 200.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    shape = MaterialTheme.shapes.small
-                ) {
-                    Text(
-                        text = logs.ifEmpty { "点击「刷新」查看日志" },
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .verticalScroll(rememberScrollState())
-                    )
-                }
-            }
-        }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "使用说明",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "1. 在 LSPosed Manager 中启用本模块\n" +
-                           "2. 在作用域中勾选「android」和「com.android.systemui」\n" +
-                           "3. 重启设备生效\n" +
-                           "4. 打开 App 时自动清除该应用的通知\n" +
-                           "5. 正在进行的通知会被保留",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
+
+        InfoCard(
+            title = "Behavior",
+            body = "When a scoped app gains window focus, the module clears that app's own non-ongoing notifications. It does not hook system_server and does not try to cancel notifications from unrelated apps."
+        )
+
+        InfoCard(
+            title = "How to use",
+            body = "1. Install the APK.\n2. Enable the module in LSPosed or Vector.\n3. Scope it to the apps you want cleaned.\n4. Reopen the target app.\n5. Ongoing notifications such as media playback are preserved."
+        )
+
+        InfoCard(
+            title = "Notes",
+            body = "This build intentionally removes the old broken settings bridge. The module now exposes one fixed lightweight policy so behavior is deterministic and matches the implementation."
+        )
+    }
+}
+
+@Composable
+private fun InfoCard(title: String, body: String) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = body,
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }

@@ -1,121 +1,76 @@
 # Auto-Clear-Notification
 
-一款基于 LSPosed 框架的模块，用于解决「打开应用后通知不会自动从通知中心消失」的问题。
+轻量型 AP101 Xposed 模块：当被作用域选中的 App 重新获得窗口焦点时，自动清理该 App 自己发出的、非持续性的通知。
 
----
+## 定位
 
-## 功能特性
+- 不 hook `system_server`
+- 不操作 `NotificationManagerService`
+- 不尝试清理其他应用的通知
+- 只在目标 App 进程内工作
 
-- **Hook system_server 进程**：在 Activity 恢复/显示时自动清除通知
-- **智能过滤**：自动排除正在进行的通知（如音乐播放、导航等）
-- **用户可配置**：可自定义延迟时间、添加排除列表
-- **系统应用保护**：内置白名单，自动排除系统应用
+这次整理后的实现与旧 README 不同，当前仓库以“轻量、可构建、行为明确”为目标。
 
----
+## 当前行为
 
-## 兼容性
+模块会在被选中 App 的 `Activity.onWindowFocusChanged(true)` 之后执行：
 
-| 项目 | 要求 |
-|------|------|
-| 目标系统 | 小米澎湃系统（HyperOS）/ MIUI |
-| Android 版本 | Android 12 - Android 16 |
-| 框架 | LSPosed / EdXposed |
+1. 获取该 App 自己当前仍然活跃的通知
+2. 跳过 ongoing 通知
+3. 清除其余通知
 
----
+这和 Android `NotificationManager.getActiveNotifications()` 的能力边界一致。
 
-## 技术原理
+## 技术栈
 
-本模块 Hook `system_server` 进程中的 `ActivityRecord` 类：
-
-### Hook 触发点
-
-- `com.android.server.wm.ActivityRecord`
-  - `performResume()` - Activity 恢复时
-  - `showToUserIfNeeded()` - Activity 显示时
-
-### 执行流程
-
-1. 获取当前 Activity 的包名
-2. 通过 `LocalServices` 获取 `NotificationManagerService` 实例
-3. 调用 `cancelAllNotificationsInt()` 清除历史通知
-4. 过滤正在进行的通知（`FLAG_ONGOING_EVENT`）
-
----
-
-## 安装步骤
-
-### 方式一：从源码编译
-
-```bash
-# 克隆项目
-git clone https://github.com/gkeyes/Auto-Clear-Notification.git
-cd Auto-Clear-Notification
-
-# 编译 Debug 版本
-./gradlew assembleDebug
-
-# 安装
-adb install app/build/outputs/apk/debug/app-debug.apk
-```
-
-### 方式二：通过 LSPosed Manager
-
-1. 在 LSPosed Manager 中搜索并启用本模块
-2. 选择需要 Hook 的应用范围（通常选择「全部」）
-3. 重启设备
-
----
-
-## 使用说明
-
-1. **启用模块**：在 LSPosed Manager 中启用并勾选作用域
-2. **功能开关**：在模块设置中开启/关闭功能
-3. **保留通知**：开启「保留正在进行的通知」保留音乐等通知
-4. **清除延迟**：调整应用启动到清除通知的延迟时间
-5. **排除应用**：在黑名单中添加不希望自动清除通知的应用
-
----
+- modern `libxposed` API `101`
+- Android Gradle Plugin `8.2.0`
+- Kotlin `1.9.20`
+- Compose 作为说明页 UI
 
 ## 项目结构
 
-```
-Auto-Clear-Notification/
-├── app/
-│   ├── src/main/
-│   │   ├── java/com/auto/clear/notification/
-│   │   │   ├── InitPackage.kt      # LSPosed 入口类
-│   │   │   ├── MainActivity.kt     # 主界面
-│   │   │   ├── MainApplication.kt  # 应用入口
-│   │   │   ├── config/
-│   │   │   │   └── ConfigManager.kt    # 配置管理
-│   │   │   ├── hook/
-│   │   │   │   └── NotificationHooker.kt  # 核心 Hook 类
-│   │   │   ├── ui/
-│   │   │   │   └── SettingsActivity.kt # 设置界面
-│   │   │   └── service/
-│   │   │       └── ClearNotificationService.kt # 通知清除服务
-│   │   ├── assets/
-│   │   │   └── xposed_init       # Xposed 入口配置
-│   │   └── AndroidManifest.xml  # 模块声明
-│   └── build.gradle.kts
-├── gradle/
-├── build.gradle.kts
-├── settings.gradle.kts
-├── gradlew / gradlew.bat
-└── README.md
+```text
+app/src/main/java/com/auto/clear/notification/
+├── MainActivity.kt
+└── NotificationCleanerModule.java
+
+app/src/main/resources/META-INF/xposed/
+├── java_init.list
+└── module.prop
+
+.github/workflows/
+└── android-release.yml
 ```
 
----
+## 本地编译
 
-## 注意事项
+```bash
+gradle assembleRelease
+```
 
-1. **需要 Root**：必须使用 Root 权限才能安装 LSPosed 模块
-2. **重启生效**：安装或更新模块后需要重启设备
-3. **权限要求**：模块不需要额外权限，通过系统 API 操作通知
-4. **兼容性**：不同 MIUI/HyperOS 版本可能需要调整 Hook 点
+如果你更习惯 Android Studio，直接导入工程后执行 `assembleRelease` 即可。
 
----
+## GitHub Actions
 
-## License
+仓库包含 release 构建工作流：
 
-MIT License
+- 文件：`.github/workflows/android-release.yml`
+- 输出：`app/build/outputs/apk/release/*.apk`
+- Artifact 名称：`Auto-Clear-Notification-release-apk`
+
+## 使用方式
+
+1. 安装 APK
+2. 在 LSPosed 或 Vector 中启用模块
+3. 只给你希望自动清理通知的 App 勾选作用域
+4. 重新打开目标 App
+
+## 说明
+
+旧仓库中的以下内容已不再作为当前实现的一部分：
+
+- 旧版 `assets/xposed_init`
+- `system_server` 方案描述
+- 那套没有真正连通 hook 进程的设置同步逻辑
+- 未闭环的通知监听 service 分支

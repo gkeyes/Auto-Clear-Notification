@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">NotifyDis</string>
+    <string name="app_name">Auto-Clear Notification</string>
+    <string name="module_description">Lightweight AP101 Xposed module that clears a scoped app's own non-ongoing notifications when the app regains focus.</string>
 </resources>
