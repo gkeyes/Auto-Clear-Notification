@@ -57,6 +57,8 @@ gradle assembleRelease
 - 文件：`.github/workflows/android-release.yml`
 - 输出：`app/build/outputs/apk/release/*.apk`
 - Artifact 名称：`Auto-Clear-Notification-release-apk`
+- APK 使用 GitHub runner 的 debug signing key 签名，可直接安装。
+- 如果需要长期覆盖安装兼容，应该改用 GitHub Secrets 注入私有 release keystore。
 
 ## 使用方式
 
