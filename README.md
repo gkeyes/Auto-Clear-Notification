@@ -9,8 +9,6 @@
 - 不尝试清理其他应用的通知
 - 只在目标 App 进程内工作
 
-这次整理后的实现与旧 README 不同，当前仓库以“轻量、可构建、行为明确”为目标。
-
 ## 当前行为
 
 模块会在被选中 App 的 `Activity.onWindowFocusChanged(true)` 之后执行：
@@ -26,6 +24,7 @@
 - modern `libxposed` API `101`
 - Android Gradle Plugin `8.2.0`
 - 原生 Android Activity 作为说明页 UI
+- release APK 使用 CI debug signing key 签名
 
 ## 项目结构
 
@@ -45,7 +44,7 @@ app/src/main/resources/META-INF/xposed/
 ## 本地编译
 
 ```bash
-gradle assembleRelease
+./gradlew assembleRelease
 ```
 
 如果你更习惯 Android Studio，直接导入工程后执行 `assembleRelease` 即可。
@@ -66,12 +65,3 @@ gradle assembleRelease
 2. 在 LSPosed 或 Vector 中启用模块
 3. 只给你希望自动清理通知的 App 勾选作用域
 4. 重新打开目标 App
-
-## 说明
-
-旧仓库中的以下内容已不再作为当前实现的一部分：
-
-- 旧版 `assets/xposed_init`
-- `system_server` 方案描述
-- 那套没有真正连通 hook 进程的设置同步逻辑
-- 未闭环的通知监听 service 分支
