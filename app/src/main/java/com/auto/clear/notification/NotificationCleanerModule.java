@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.util.Log;
 
 import java.lang.reflect.Method;
 import java.util.Set;
@@ -28,7 +29,7 @@ public final class NotificationCleanerModule extends XposedModule {
 
     @Override
     public void onModuleLoaded(XposedModuleInterface.ModuleLoadedParam param) {
-        log("[" + TAG + "] loaded in process: " + safeProcessName(param));
+        logInfo("loaded in process: " + safeProcessName(param));
     }
 
     @Override
@@ -59,9 +60,9 @@ public final class NotificationCleanerModule extends XposedModule {
                         }
                         return result;
                     });
-            log("[" + TAG + "] hooked Activity.onWindowFocusChanged for " + packageName);
+            logInfo("hooked Activity.onWindowFocusChanged for " + packageName);
         } catch (Throwable t) {
-            log("[" + TAG + "] failed to hook focus callback", t);
+            logError("failed to hook focus callback", t);
         }
     }
 
@@ -93,10 +94,10 @@ public final class NotificationCleanerModule extends XposedModule {
             }
 
             if (cleared > 0) {
-                log("[" + TAG + "] cleared " + cleared + " notifications for " + packageName);
+                logInfo("cleared " + cleared + " notifications for " + packageName);
             }
         } catch (Throwable t) {
-            log("[" + TAG + "] clear notifications failed for " + packageName, t);
+            logError("clear notifications failed for " + packageName, t);
         }
     }
 
@@ -114,5 +115,13 @@ public final class NotificationCleanerModule extends XposedModule {
         } catch (Throwable ignored) {
             return "<unknown>";
         }
+    }
+
+    private void logInfo(String message) {
+        log(Log.INFO, TAG, message);
+    }
+
+    private void logError(String message, Throwable throwable) {
+        log(Log.ERROR, TAG, message, throwable);
     }
 }
