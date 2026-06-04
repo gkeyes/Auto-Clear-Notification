@@ -23,14 +23,13 @@
 
 - modern `libxposed` API `101`
 - Android Gradle Plugin `8.2.0`
-- 原生 Android Activity 作为说明页 UI
+- 不注册 launcher Activity，安装后不显示桌面图标
 - release APK 使用 CI debug signing key 签名
 
 ## 项目结构
 
 ```text
 app/src/main/java/com/auto/clear/notification/
-├── MainActivity.java
 └── NotificationCleanerModule.java
 
 app/src/main/resources/META-INF/xposed/
@@ -65,3 +64,5 @@ app/src/main/resources/META-INF/xposed/
 2. 在 LSPosed 或 Vector 中启用模块
 3. 只给你希望自动清理通知的 App 勾选作用域
 4. 重新打开目标 App
+
+安装后不会在桌面显示 App 图标；这是预期行为，模块只通过 LSPosed 或 Vector 管理。
