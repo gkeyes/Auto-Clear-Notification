@@ -24,7 +24,7 @@
 - modern `libxposed` API `101`
 - Android Gradle Plugin `8.2.0`
 - 不注册 launcher Activity，安装后不显示桌面图标
-- release APK 使用 CI debug signing key 签名
+- release APK 使用 GitHub Secrets 注入的固定 release keystore 签名
 
 ## 项目结构
 
@@ -55,8 +55,8 @@ app/src/main/resources/META-INF/xposed/
 - 文件：`.github/workflows/android-release.yml`
 - 输出：`app/build/outputs/apk/release/*.apk`
 - Artifact 名称：`Auto-Clear-Notification-release-apk`
-- APK 使用 GitHub runner 的 debug signing key 签名，可直接安装。
-- 如果需要长期覆盖安装兼容，应该改用 GitHub Secrets 注入私有 release keystore。
+- APK 使用固定 release keystore 签名，后续版本可覆盖安装。
+- keystore 通过 GitHub Secrets 注入 CI，不提交到仓库。
 
 ## 使用方式
 
